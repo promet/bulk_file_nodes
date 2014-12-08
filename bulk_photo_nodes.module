@@ -21,8 +21,7 @@ function bulk_photo_nodes_permission() {
 function bulk_photo_nodes_menu() {
   $items = array();
 
-  $bpn_var = variable_get('bulk_photo_node_types');
-  if (!empty($bpn_var)) {
+  if ($bpn_var = bulk_photo_nodes_get_types()) {
 
     // Taken from node.module
     node_type_cache_reset();
@@ -52,8 +51,7 @@ function bulk_photo_nodes_menu() {
  * Replaces standard node add pages with bulk pages.
  */
 function bulk_photo_nodes_menu_alter(&$items) {
-  $bpn_var = variable_get('bulk_photo_node_types');
-  if (!empty($bpn_var)) {
+  if ($bpn_var = bulk_photo_nodes_get_types()) {
 
     foreach (entity_get_info() as $entity_type => $entity_info) {
       if ($entity_type !== 'node') {
@@ -175,11 +173,11 @@ function bulk_photo_nodes_get_image_field($node_type) {
 
 function bulk_photo_nodes_get_option($node_type, $option = 'override') {
   $bpn_var = variable_get('bulk_photo_node_types');
-  if (is_array($bpn_var)) {
-    $key = $node_type . '_' . $option;
-    return (array_key_exists($key, $bpn_var)) ? $bpn_var[$key] : 'none';
+  if (!is_array($bpn_var)) {
+    return 'none';
   }
-  return 'none';
+  $key = $node_type . '_' . $option;
+  return (array_key_exists($key, $bpn_var)) ? $bpn_var[$key] : 'none';
 }
 
 /**
@@ -248,8 +246,7 @@ function bulk_photo_nodes_page_get($node_type) {
 function bulk_photo_nodes_is_bpn_add_page($node_type) {
   $query = drupal_get_query_parameters();
   if (!is_array($query) || !array_key_exists('override', $query)) {
-    $bpn_var = variable_get('bulk_photo_node_types');
-    if (!empty($bpn_var) && !isset($bpn_var[$node_type]) && $bpn_var[$node_type] !== 'none') {
+    if ($bpn_var = bulk_photo_nodes_get_types() && !isset($bpn_var[$node_type]) && $bpn_var[$node_type] !== 'none') {
       return TRUE;
     }
   }
@@ -459,7 +456,7 @@ function bulk_photo_nodes_get_session_files(&$form_state) {
     $form_state['saved_files'] = $_SESSION['saved_files'];
   }
   if (empty($form_state['saved_files'])) {
-    drupal_goto("node/add/$form_state[node_type]");
+    drupal_goto('node/add/'. strtr($form_state[node_type], '_', '-'));
   }
 }
 
@@ -1034,4 +1031,12 @@ function bulk_photo_nodes_field_add_more_js($form, $form_state) {
   $element[$delta]['#suffix'] = (isset($element[$delta]['#suffix']) ? $element[$delta]['#suffix'] : '') . '</div>';
 
   return $element;
+}
+
+/**
+ * Return bulk_photo_node_types();
+ */
+function bulk_photo_nodes_get_types() {
+  $bpn_var = variable_get('bulk_photo_node_types');
+  return !empty($bpn_var) ? $bpn_var : FALSE;
 }
