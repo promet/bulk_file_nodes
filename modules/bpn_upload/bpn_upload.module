@@ -30,7 +30,7 @@ function bpn_upload_form($form, &$form_state, $node_type) {
   }
   $form_callback = 'bpn_upload_form_step_' . $form_state['step'];
   if (function_exists($form_callback)) {
-    return call_user_func($form_callback, $form, $form_state);
+    return $form_callback($form, $form_state);
   }
   return $form;
 }
@@ -91,7 +91,8 @@ function bpn_upload_form_step_1_submit($form, &$form_state) {
       $destination = file_unmanaged_move($source, $destination, FILE_EXISTS_RENAME);
       $file = plupload_file_uri_to_object($destination);
       file_save($file);
-      if (function_exists('exif_read_data')) {
+
+      if (function_exists('exif_read_data') && in_array($file->filemime, array('image/jpeg', 'image/tiff'))) {
         $extra_info = exif_read_data(drupal_realpath($destination));
       }
       $form_state['saved_files'][] = array(
