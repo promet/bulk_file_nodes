@@ -146,7 +146,7 @@ function bulk_photo_nodes_get_image_fields($node_type) {
   foreach ($fields_info as $field_name => $field_value) {
     $field_info = field_info_field($field_name);
     $type = $field_info['type'];
-    if ($type == 'image') {
+    if ($type == 'image' || $type == 'file') {
       $image_fields[$field_name] = $field_value['label'];
     }
   }
@@ -437,9 +437,14 @@ function bulk_photo_nodes_create_subform(&$form, &$form_state) {
 
     // Manually attach file from plupload.
     $image_field = bulk_photo_nodes_get_image_field($node->type);
+    $image_field_info = field_info_field($image_field);
     unset($form['nodes'][$key]['right']['node'][$image_field]);
     $form['nodes'][$key]['right']['node'][$image_field]['und'][0]['#type'] = 'value';
     $form['nodes'][$key]['right']['node'][$image_field]['und'][0]['#value'] = (array) $file['file_object'];
+    if ($image_field_info['type'] == 'file') {
+      $form['nodes'][$key]['right']['node'][$image_field]['und'][0]['#value']['display'] = $image_field_info['settings']['display_default'];
+      $form['nodes'][$key]['right']['node'][$image_field]['und'][0]['#value']['description'] = '';
+    }
 
     // Move body field around to proper fieldset.
     $form['nodes'][$key]['right']['body'] = $form['nodes'][$key]['right']['node']['body'];
