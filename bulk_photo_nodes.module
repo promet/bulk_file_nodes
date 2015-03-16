@@ -361,8 +361,8 @@ function bulk_photo_nodes_create_subform(&$form, &$form_state) {
     $node = bulk_photo_nodes_create_node($form_state['node_type']);
     $image_field = bulk_photo_nodes_get_image_field($node->type);
     $image_field_info = field_info_field($image_field);
+    $extra_info = !empty($file['extra_info']) ? $file['extra_info'] : array();
     if ($image_field_info['type'] == 'image') {
-      $extra_info = !empty($file['extra_info']) ? $file['extra_info'] : array();
       $vars = array(
         'style_name' => 'bulk_photo_nodes',
         'path' => $file['file_object']->uri,
