@@ -358,16 +358,24 @@ function bulk_photo_nodes_create_node($bundle) {
  */
 function bulk_photo_nodes_create_subform(&$form, &$form_state) {
   foreach ($form_state['saved_files'] as $key => $file) {
-    $extra_info = !empty($file['extra_info']) ? $file['extra_info'] : array();
-    $vars = array(
-      'style_name' => 'bulk_photo_nodes',
-      'path' => $file['file_object']->uri,
-      'attributes' => array('class' => 'bpn-info-node-image'),
-    );
-    $markup = theme('image_style', $vars);
-
     $node = bulk_photo_nodes_create_node($form_state['node_type']);
-
+    $image_field = bulk_photo_nodes_get_image_field($node->type);
+    $image_field_info = field_info_field($image_field);
+    $extra_info = !empty($file['extra_info']) ? $file['extra_info'] : array();
+    if ($image_field_info['type'] == 'image') {
+      $vars = array(
+        'style_name' => 'bulk_photo_nodes',
+        'path' => $file['file_object']->uri,
+        'attributes' => array('class' => 'bpn-info-node-image'),
+      );
+      $markup = theme('image_style', $vars);
+    }
+    else {
+      $vars = array(
+        'file' => $file['file_object'],
+      );
+      $markup = theme('file_link', $vars);
+    }
     $form['nodes'][$key] = array(
       '#type' => 'fieldset',
       '#tree' => TRUE,
@@ -436,8 +444,6 @@ function bulk_photo_nodes_create_subform(&$form, &$form_state) {
     field_attach_form('node', $node, $form['nodes'][$key]['right']['node'], $form_state);
 
     // Manually attach file from plupload.
-    $image_field = bulk_photo_nodes_get_image_field($node->type);
-    $image_field_info = field_info_field($image_field);
     unset($form['nodes'][$key]['right']['node'][$image_field]);
     $form['nodes'][$key]['right']['node'][$image_field]['und'][0]['#type'] = 'value';
     $form['nodes'][$key]['right']['node'][$image_field]['und'][0]['#value'] = (array) $file['file_object'];
