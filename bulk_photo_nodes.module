@@ -950,12 +950,19 @@ function bulk_photo_nodes_check_field_empty($field_name, $node) {
     if (is_array($field_items)) {
       // Multi-value field.
       foreach ($field_items as $item) {
+        if ($field_info['type'] == 'taxonomy_term_reference') {
+          $item = array('tid' => ($item === 0) ? NULL : $item);
+        }
         if (!$empty_function($item, $field_info)) {
           $field_has_value = TRUE;
         }
       }
     }
     elseif (!is_array($field_items) && !empty($field_items)) {
+      if ($field_info['type'] == 'taxonomy_term_reference') {
+        $field_items = array('tid' => $field_items);
+      }
+
       // String/numeric value.
       if (!$empty_function($field_items, $field_info)) {
         $field_has_value = TRUE;
