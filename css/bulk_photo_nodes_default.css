@@ -77,7 +77,7 @@
 }
 /* line 88, ../sass/bulk_photo_nodes_default.scss */
 #bpn-upload-form .ajax-overlay, #bpn-flickr-form .ajax-overlay, #bpn-flickr-private-form .ajax-overlay, form.bpn-enabled .ajax-overlay {
-  position: absolute;
+  position: fixed;
   right: 0;
   top: 0;
   bottom: 0;
@@ -105,7 +105,7 @@
   width: 50px;
 }
 
-/* line 118, ../sass/bulk_photo_nodes_default.scss */
+/* line 117, ../sass/bulk_photo_nodes_default.scss */
 .bpn-flickr,
 .flickr-private {
   background: url(../images/flickr_logo.png) no-repeat 100% 0;
