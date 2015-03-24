@@ -333,6 +333,12 @@ function bulk_photo_nodes_create_overrides(&$form, &$form_state) {
     '#submit' => array('bulk_photo_nodes_add_form_submit'),
   );
 
+  // Support for workbench_access module.
+  if (module_exists('workbench_access')) {
+    $form['override_fields']['fields']['#node_edit_form'] = TRUE;
+    workbench_access_form_alter($form['override_fields']['fields'], $form_state, $form_state['node_type'] . '_node_form');
+  }
+
   // Set all batch fields as optional.
   bulk_photo_nodes_recursive_set_optional($form['override_fields']['fields']);
 
@@ -443,6 +449,12 @@ function bulk_photo_nodes_create_subform(&$form, &$form_state) {
     // Attach all fields found in the node form.
     field_attach_form('node', $node, $form['nodes'][$key]['right']['node'], $form_state);
 
+    // Support for workbench_access module.
+    if (module_exists('workbench_access')) {
+      $form['nodes'][$key]['right']['node']['#node_edit_form'] = TRUE;
+      workbench_access_form_alter($form['nodes'][$key]['right']['node'], $form_state, $form_state['node_type'] . '_node_form');
+    }
+
     // Manually attach file from plupload.
     unset($form['nodes'][$key]['right']['node'][$image_field]);
     $form['nodes'][$key]['right']['node'][$image_field]['und'][0]['#type'] = 'value';
@@ -551,7 +563,7 @@ function bulk_photo_nodes_add_form_submit($form, &$form_state) {
  */
 function bulk_photo_nodes_batch_finished($success, $results, $operations) {
   if ($success) {
-    drupal_set_message(t('@count Photos saved.', array('@count' => count($results))));
+    drupal_set_message(t('@count files saved.', array('@count' => count($results))));
 
     // Delete old image style generated images.
     $image_style = image_style_load('bulk_photo_nodes');
@@ -656,6 +668,17 @@ function bulk_photo_nodes_prepare_fields(&$node_fields, $node, &$node_overrides,
       $empty_function = $field_info['module'] . '_field_is_empty';
       $is_empty = TRUE;
       if (function_exists($empty_function)) {
+
+        // Prepares specific field types.
+        if ($field_info['type'] == 'taxonomy_term_reference') {
+          $values = $node->$field_name;
+          $node->$field_name = array();
+          foreach ($values as $lang => $field_items) {
+            foreach (array_filter($field_items) as $item) {
+              $node->{$field_name}[$lang][]['tid'] = $item;
+            }
+          }
+        }
         $items = field_get_items('node', $node, $field_name);
         if (is_array($items)) {
           foreach ($items as $item) {
@@ -668,6 +691,13 @@ function bulk_photo_nodes_prepare_fields(&$node_fields, $node, &$node_overrides,
           if (!$empty_function($items, $field_info)) {
             $is_empty = FALSE;
           }
+        }
+      }
+      elseif (module_exists('workbench_access') && $field_name == 'workbench_access') {
+        $is_empty = TRUE;
+        if (!empty($field_values['workbench_access'])) {
+          $is_empty = FALSE;
+          $field_values = $field_values['workbench_access'];
         }
       }
     }
@@ -684,6 +714,20 @@ function bulk_photo_nodes_prepare_fields(&$node_fields, $node, &$node_overrides,
         $check_empty = _bulk_photo_nodes_array_filter($node_overrides[$field_name]);
         if (!empty($check_empty)) {
           $node->$field_name = $node_overrides[$field_name];
+
+          // Cleans up values for specific field types.
+          if (module_exists('workbench_access') && $field_name == 'workbench_access') {
+            $node->$field_name = $node->{$field_name}['workbench_access'];
+          }
+          elseif (isset($field_info['type']) && $field_info['type'] == 'taxonomy_term_reference') {
+            $values = $node->$field_name;
+            $node->$field_name = array();
+            foreach ($values as $lang => $field_items) {
+              foreach (array_filter($field_items) as $item) {
+                $node->{$field_name}[$lang][]['tid'] = $item;
+              }
+            }
+          }
         }
         else {
           unset($node->$field_name);
@@ -970,6 +1014,11 @@ function bulk_photo_nodes_check_field_empty($field_name, $node) {
       else {
         $field_has_value = FALSE;
       }
+    }
+  }
+  elseif (module_exists('workbench_access') && $field_name == 'workbench_access') {
+    if (!empty($node->workbench_access['workbench_access'])) {
+      $field_has_value = TRUE;
     }
   }
   return $field_has_value;
