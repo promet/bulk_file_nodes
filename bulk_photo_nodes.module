@@ -846,7 +846,11 @@ function bulk_photo_nodes_recursive_set_optional(&$element) {
   }
   if (isset($element['#required'])) {
     $element['#required'] = FALSE;
-    $element['#element_validate'] = array();
+
+    // We need element_validate here, since it cleans up date values.
+    if (empty($element['#type']) || $element['#type'] != 'date_combo') {
+      $element['#element_validate'] = array();
+    }
   }
   $children = element_children($element);
   if ($children) {
