@@ -29,7 +29,7 @@ function bulk_photo_nodes_menu() {
       if (!empty($bpn_var[$type->type]) && $bpn_var[$type->type] !== 'none') {
         $type_url_str = str_replace('_', '-', $type->type);
         $items['node/add/' . $type_url_str . '/bulk'] = array(
-          'title' => 'Bulk Add Photos',
+          'title' => 'Bulk Add ' . $type->name,
           'title callback' => 'check_plain',
           'page callback' => 'bulk_photo_nodes_page_get',
           'page arguments' => array($type->type),
