@@ -640,11 +640,8 @@ function bulk_photo_nodes_save_node($node_type, $node_fields, $node_overrides, &
   // Allow to use the same filename, but update image information
   // ONLY if image URI has changed.
   $destination = $options['scheme'] . $image_field->filename;
-  if ($destination == $image_field->uri) {
-    $image_field_ref = $node->{$image_field_name}[LANGUAGE_NONE][0];
-  }
-  else {
-    $image_field_ref = (array) file_move($image_field, $destination, FILE_EXISTS_REPLACE);
+  if ($destination != $image_field->uri) {
+    $image_field_ref = (array) file_move($image_field, $destination);
   }
 
   // Correctly set all fields for the node.
