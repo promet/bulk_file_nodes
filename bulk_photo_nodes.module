@@ -636,9 +636,16 @@ function bulk_photo_nodes_save_node($node_type, $node_fields, $node_overrides, &
   if ($options['directory'] == '/') {
     $options['directory'] = '';
   }
-  $destination = $options['scheme'] . $image_field->uid . '-' . $images_count . '.' . $extension;
-  $image_field->filename = $image_field->uid . '-' . $images_count . '.' . $extension;
-  $image_field_ref = (array) file_move($image_field, $destination, FILE_EXISTS_REPLACE);
+
+  // Allow to use the same filename, but update image information
+  // ONLY if image URI has changed.
+  $destination = $options['scheme'] . $image_field->filename;
+  if ($destination == $image_field->uri) {
+    $image_field_ref = $node->{$image_field_name}[LANGUAGE_NONE][0];
+  }
+  else {
+    $image_field_ref = (array) file_move($image_field, $destination, FILE_EXISTS_REPLACE);
+  }
 
   // Correctly set all fields for the node.
   $node = bulk_photo_nodes_prepare_fields($node_fields, $node, $node_overrides, $image_field_name);
@@ -1088,7 +1095,7 @@ function bulk_photo_nodes_field_add_more_js($form, $form_state) {
   $parents = $element['#field_parents'];
 
   if (empty($field_name)) {
-  	return;
+    return;
   }
 
   $field = field_info_field($field_name);
